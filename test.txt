@@ -1,0 +1,128 @@
+#include <Car_Library.h>
+
+// 실제 가변저항 범위
+const int LA = 558;
+const int MA = 507;
+const int RA = 460;
+
+// 사용할 가변저항 범위
+const int bound = 50;
+const int L_max = MA+bound;
+const int R_max = MA-bound;
+
+int motorA1 = 4;
+int motorA2 = 3;
+int motorA3 = 5;
+int motorA4 = 6;
+int motorA5 = 7;
+int motorA6 = 8;
+int analogPin = A5;   // 좌~중~우    538 ~ 512 ~ 486
+int ohm;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(motorA1,OUTPUT);
+  pinMode(motorA2,OUTPUT);
+  pinMode(motorA3,OUTPUT);
+  pinMode(motorA4,OUTPUT);
+  pinMode(motorA5,OUTPUT);
+  pinMode(motorA6,OUTPUT);
+  delay(5000);
+}
+
+char angle;
+
+void loop() {
+
+
+//    ohm_tester();
+
+    if (Serial.available() > 0) { // 시리얼로 데이터 수신 확인
+      angle = Serial.read();
+      if (angle == '^'){
+          go_stop();
+      }
+      else{
+          move_ohm(angle-60);
+          Move_forward();
+      }
+    }
+    else {
+        go_stop();
+    }
+}
+
+void ohm_tester(){
+  ohm = analogRead(analogPin);
+  Serial.println(ohm);
+}
+
+void Left_change(){
+  // 전진속도 50 기준
+  motor_forward(motorA3, motorA4, 150);
+  delay(7300);
+  motor_backward(motorA3, motorA4, 150);
+  delay(8800);
+  move_ohm(0);
+}
+
+void Right_change(){
+  motor_backward(motorA3, motorA4, 150);
+  delay(9000);
+  motor_forward(motorA3, motorA4, 150);
+  delay(8000);
+  move_ohm(0);
+}
+
+void move_ohm(char slope){
+  ohm = analogRead(analogPin) - MA;
+  if(ohm >= slope + 3){
+    // 오른쪽으로 회전 : ohm을 감소시키는 방향
+    motor_backward(motorA3, motorA4, 60);            // 3. 오른쪽으로 회전
+  }
+  else if(ohm <= slope - 3){
+    // 왼쪽으로 회전 : ohm을 증가시키는 방향
+    motor_forward(motorA3, motorA4, 60);            // 3. 왼쪽으로 회전
+  }
+  else{
+    // 없음
+  }
+}
+
+void Parking_start(){
+  // 전진속도 50 기준
+  motor_forward(motorA3, motorA4, 150);
+  delay(1000);
+  Move_forward();
+  delay(8000);
+  go_stop();
+  motor_backward(motorA3, motorA4, 150);
+  delay(1000);
+  Move_backward();
+  delay(8000);
+  go_stop();
+  int rep = 1000;
+  while(rep--){
+    move_ohm(0);
+  }
+  Move_backward();
+  delay(6000);
+  go_stop();
+  // 주차 완료
+  delay(100000);
+}
+
+void Move_forward(){
+  motor_forward(motorA1, motorA2, 150);
+  motor_forward(motorA5, motorA6, 150);
+}
+
+void Move_backward(){
+  motor_backward(motorA1, motorA2, 50);
+  motor_backward(motorA5, motorA6, 50);
+}
+
+void go_stop(){
+  motor_hold(motorA1, motorA2);
+  motor_hold(motorA5, motorA6);
+}

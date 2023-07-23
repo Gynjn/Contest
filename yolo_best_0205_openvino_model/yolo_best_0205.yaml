@@ -1,0 +1,6 @@
+stride: 32
+names:
+  0: crosswalk
+  1: traffic light-green-
+  2: traffic light-red-
+  3: car
